@@ -70,10 +70,63 @@
 .grupo.lleno {
     background-color: #f8f9fa;
     opacity: 0.8;
+    position: relative;
+}
+
+.grupo.lleno::after {
+    content: 'COMPLETO';
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: #dc3545;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8em;
+    font-weight: bold;
+}
+
+.grupo button:disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
+    opacity: 0.7;
 }
 
 .grupo.lleno button {
-    background-color: #95a5a6;
+    background-color: #6c757d;
+    cursor: not-allowed;
+}
+
+/* Contador con estado */
+.contador {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.contador.lleno {
+    background-color: #dc3545;
+    color: white;
+}
+
+.contador.casi-lleno {
+    background-color: #ffc107;
+    color: #000;
+}
+
+/* Animación para cambios de estado */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.grupo.lleno {
+    animation: pulse 0.5s ease;
 }
 
 /* Mensaje de selección */

@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getDatabase, ref, onValue, update, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+import { getDatabase, ref, onValue, update, get, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 const firebaseConfig = {
@@ -17,26 +17,44 @@ const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 const auth = getAuth(app);
 
-// Verificar autenticación
+// Función para actualizar la UI de un grupo
+function actualizarUIGrupo(numeroGrupo, cantidadMiembros) {
+    const grupoElement = document.querySelector(`.grupo:nth-child(${numeroGrupo})`);
+    const button = document.getElementById(`btn-${numeroGrupo}`);
+    const contador = document.getElementById(`count-${numeroGrupo}`);
+    
+    if (grupoElement && button && contador) {
+        // Actualizar contador
+        contador.textContent = cantidadMiembros;
+        
+        // Actualizar estado del grupo y botón
+        if (cantidadMiembros >= 12) {
+            button.disabled = true;
+            grupoElement.classList.add('lleno');
+            button.textContent = 'Grupo Completo';
+        } else {
+            button.disabled = false;
+            grupoElement.classList.remove('lleno');
+            button.textContent = 'Seleccionar';
+        }
+    }
+}
+
+// Monitorear cambios en tiempo real
 auth.onAuthStateChanged((user) => {
     if (user) {
-        // Mostrar email del usuario
+        // Verificar si el usuario ya tiene grupo
         const userRef = ref(database, `usuarios/${user.uid}`);
         onValue(userRef, (snapshot) => {
             const userData = snapshot.val();
-            if (userData) {
-                document.getElementById('userName').textContent = 
-                    userData.nombre || user.email;
-                
-                // Si el usuario ya tiene grupo, deshabilitar todos los botones
-                if (userData.grupo) {
-                    document.querySelectorAll('.grupo button').forEach(btn => {
-                        btn.disabled = true;
-                    });
-                    const message = document.getElementById('message');
-                    message.textContent = `Ya estás asignado al Grupo ${userData.grupo}`;
-                    message.className = 'success';
-                }
+            if (userData && userData.grupo) {
+                // Deshabilitar todos los botones si el usuario ya tiene grupo
+                document.querySelectorAll('.grupo button').forEach(btn => {
+                    btn.disabled = true;
+                });
+                const message = document.getElementById('message');
+                message.textContent = `Ya estás asignado al Grupo ${userData.grupo}`;
+                message.className = 'success';
             }
         });
 
@@ -45,23 +63,15 @@ auth.onAuthStateChanged((user) => {
         onValue(gruposRef, (snapshot) => {
             const grupos = snapshot.val() || {};
             
+            // Actualizar cada grupo
             for (let i = 1; i <= 4; i++) {
-                const miembros = grupos[i] ? Object.keys(grupos[i]).length : 0;
-                document.getElementById(`count-${i}`).textContent = miembros;
-                
-                const grupoElement = document.querySelector(`.grupo:nth-child(${i})`);
-                const button = document.getElementById(`btn-${i}`);
-                
-                if (miembros >= 12) {
-                    button.disabled = true;
-                    grupoElement.classList.add('lleno');
-                } else {
-                    grupoElement.classList.remove('lleno');
-                }
+                const miembros = grupos[i]?.miembros || {};
+                const cantidadMiembros = Object.keys(miembros).length;
+                actualizarUIGrupo(i, cantidadMiembros);
             }
         });
     } else {
-        window.location.href = "index.html";
+        window.location.href = "login.html";
     }
 });
 
@@ -69,43 +79,55 @@ auth.onAuthStateChanged((user) => {
 window.seleccionarGrupo = async function(numeroGrupo) {
     const user = auth.currentUser;
     if (!user) {
-        const message = document.getElementById('message');
-        message.textContent = "Por favor, inicia sesión nuevamente.";
-        message.className = 'error';
+        mostrarMensaje("Por favor, inicia sesión nuevamente.", "error");
         return;
     }
 
-    const grupoRef = ref(database, `grupos/${numeroGrupo}`);
-    const snapshot = await get(grupoRef);
-    const miembros = snapshot.val() || {};
-    
-    if (Object.keys(miembros).length >= 12) {
-        const message = document.getElementById('message');
-        message.textContent = "Este grupo ya está completo.";
-        message.className = 'error';
-        return;
-    }
-
-    const updates = {};
-    updates[`grupos/${numeroGrupo}/${user.uid}`] = true;
-    updates[`usuarios/${user.uid}/grupo`] = numeroGrupo;
+    // Deshabilitar todos los botones mientras se procesa
+    document.querySelectorAll('.grupo button').forEach(btn => btn.disabled = true);
 
     try {
-        await update(ref(database), updates);
-        const message = document.getElementById('message');
-        message.textContent = `¡Te has unido exitosamente al Grupo ${numeroGrupo}!`;
-        message.className = 'success';
+        // Verificar el estado actual del grupo
+        const grupoRef = ref(database, `grupos/${numeroGrupo}/miembros`);
+        const snapshot = await get(grupoRef);
+        const miembros = snapshot.val() || {};
         
-        // Deshabilitar todos los botones
-        document.querySelectorAll('.grupo button').forEach(btn => {
-            btn.disabled = true;
-        });
+        if (Object.keys(miembros).length >= 12) {
+            mostrarMensaje("Este grupo ya está completo.", "error");
+            // Reactivar botones de grupos no llenos
+            document.querySelectorAll('.grupo button').forEach(btn => {
+                const grupoNum = btn.id.split('-')[1];
+                actualizarUIGrupo(grupoNum, Object.keys(grupos[grupoNum]?.miembros || {}).length);
+            });
+            return;
+        }
+
+        // Realizar la actualización
+        const updates = {};
+        updates[`grupos/${numeroGrupo}/miembros/${user.uid}`] = true;
+        updates[`usuarios/${user.uid}/grupo`] = numeroGrupo;
+        updates[`usuarios/${user.uid}/timestamp`] = serverTimestamp();
+
+        await update(ref(database), updates);
+        
+        mostrarMensaje(`¡Te has unido exitosamente al Grupo ${numeroGrupo}!`, "success");
     } catch (error) {
-        const message = document.getElementById('message');
-        message.textContent = "Error al seleccionar el grupo: " + error.message;
-        message.className = 'error';
+        console.error("Error:", error);
+        mostrarMensaje("Error al seleccionar grupo. Por favor, intenta nuevamente.", "error");
+        // Reactivar botones en caso de error
+        document.querySelectorAll('.grupo button').forEach(btn => {
+            const grupoNum = btn.id.split('-')[1];
+            actualizarUIGrupo(grupoNum, Object.keys(grupos[grupoNum]?.miembros || {}).length);
+        });
     }
 };
+
+// Función para mostrar mensajes
+function mostrarMensaje(texto, tipo) {
+    const message = document.getElementById('message');
+    message.textContent = texto;
+    message.className = tipo;
+}
 
 // Manejar cierre de sesión
 document.getElementById('btnLogout').addEventListener('click', async (e) => {
