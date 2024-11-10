@@ -61,7 +61,7 @@ auth.onAuthStateChanged((user) => {
             }
         });
     } else {
-        window.location.href = "login.html";
+        window.location.href = "index.html";
     }
 });
 
@@ -112,7 +112,7 @@ document.getElementById('btnLogout').addEventListener('click', async (e) => {
     e.preventDefault();
     try {
         await signOut(auth);
-        window.location.href = "login.html";
+        window.location.href = "index.html";
     } catch (error) {
         console.error("Error al cerrar sesión:", error);
     }
