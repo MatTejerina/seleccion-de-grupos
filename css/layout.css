@@ -1,0 +1,90 @@
+/* Estilos de layout generales */
+body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+}
+
+.content {
+    flex: 1;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Contenedores principales */
+.login-container,
+.registro-container {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+    margin: 50px auto;
+    max-width: 400px;
+}
+
+.resultados-container,
+.seleccion-container {
+    background: transparent;
+    padding: 20px;
+}
+
+/* Headers */
+h1 {
+    text-align: center;
+    color: #2c3e50;
+    margin-bottom: 30px;
+    font-size: 2.2em;
+}
+
+h2 {
+    color: #2c3e50;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+/* User header */
+.user-header {
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 8px;
+    padding: 15px 25px;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.user-header span {
+    color: #2c3e50;
+    font-size: 1.1em;
+}
+
+#userName {
+    font-weight: bold;
+    color: #3498db;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .content {
+        padding: 15px;
+    }
+
+    .login-container,
+    .registro-container {
+        margin: 20px;
+        padding: 20px;
+    }
+
+    h1 {
+        font-size: 1.8em;
+    }
+
+    h2 {
+        font-size: 1.5em;
+    }
+} 

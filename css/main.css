@@ -1,0 +1,19 @@
+/* Importar todos los estilos */
+@import 'layout.css';
+@import 'components/navbar.css';
+@import 'components/forms.css';
+@import 'components/grupos.css';
+@import 'components/messages.css';
+@import 'components/resultados.css';
+
+/* Estilos globales */
+body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    font-family: Arial, sans-serif;
+}
+
+.content {
+    padding: 20px;
+} 

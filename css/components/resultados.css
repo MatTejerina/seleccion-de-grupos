@@ -1,0 +1,151 @@
+.resultados-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.resultados-container h1 {
+    text-align: center;
+    color: #2c3e50;
+    margin-bottom: 40px;
+    font-size: 2.2em;
+}
+
+#grupos-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 30px;
+    padding: 20px;
+}
+
+.grupo-resultado {
+    background: white;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.grupo-resultado:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.grupo-titulo {
+    color: #2c3e50;
+    font-size: 1.8em;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #3498db;
+    text-align: center;
+}
+
+.miembros-lista {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.miembro-item {
+    padding: 12px 15px;
+    margin: 8px 0;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    color: #2c3e50;
+    font-size: 1.1em;
+    transition: background-color 0.2s ease;
+}
+
+.miembro-item:hover {
+    background-color: #e9ecef;
+}
+
+.miembro-item.empty {
+    color: #95a5a6;
+    font-style: italic;
+    text-align: center;
+    background-color: #f8f9fa;
+}
+
+.contador-grupo {
+    margin-top: 20px;
+    padding: 10px;
+    background-color: #e1f0fa;
+    border-radius: 8px;
+    color: #2c3e50;
+    text-align: center;
+    font-weight: 500;
+}
+
+.error-message {
+    background-color: #fee2e2;
+    border: 1px solid #fecaca;
+    color: #991b1b;
+    padding: 15px 20px;
+    border-radius: 8px;
+    text-align: center;
+    margin: 20px auto;
+    max-width: 600px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .resultados-container {
+        padding: 15px;
+    }
+
+    .resultados-container h1 {
+        font-size: 1.8em;
+        margin-bottom: 30px;
+    }
+
+    #grupos-container {
+        grid-template-columns: 1fr;
+        gap: 20px;
+        padding: 10px;
+    }
+
+    .grupo-titulo {
+        font-size: 1.5em;
+    }
+
+    .miembro-item {
+        font-size: 1em;
+    }
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.grupo-resultado {
+    animation: fadeIn 0.5s ease forwards;
+}
+
+/* Estilos para el líder del grupo */
+.lider-grupo {
+    font-size: 1.2em;
+    color: #34495e;
+    text-align: center;
+    margin: -10px 0 20px 0;
+    font-weight: 500;
+}
+
+/* Contador con estilo más llamativo */
+.contador-grupo {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 25px;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+} 

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Selección de Grupos</title>
+    <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="seleccion_grupos.html" class="nav-logo">Sistema de Grupos</a>
+            <div class="nav-links">
+                <a href="seleccion_grupos.html" class="active">Selección</a>
+                <a href="resultados.html">Resultados</a>
+                <a href="#" id="btnLogout">Cerrar Sesión</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="content">
+        <div class="seleccion-container">
+            <div class="user-header">
+                <span>Bienvenido/a: <span id="userName">Cargando...</span></span>
+            </div>
+
+            <h2>Selección de Grupo</h2>
+            <div id="grupos-container">
+                <div class="grupo">
+                    <h3>Agustin Sal</h3>
+                    <div class="contador">
+                        Integrantes: <span id="count-1">0</span>/12
+                    </div>
+                    <button id="btn-1" onclick="seleccionarGrupo(1)">Seleccionar</button>
+                </div>
+                <div class="grupo">
+                    <h3>Fabian Guerrero</h3>
+                    <div class="contador">
+                        Integrantes: <span id="count-2">0</span>/12
+                    </div>
+                    <button id="btn-2" onclick="seleccionarGrupo(2)">Seleccionar</button>
+                </div>
+                <div class="grupo">
+                    <h3>Manuel Sosa</h3>
+                    <div class="contador">
+                        Integrantes: <span id="count-3">0</span>/12
+                    </div>
+                    <button id="btn-3" onclick="seleccionarGrupo(3)">Seleccionar</button>
+                </div>
+                <div class="grupo">
+                    <h3>Sergio Gomez</h3>
+                    <div class="contador">
+                        Integrantes: <span id="count-4">0</span>/12
+                    </div>
+                    <button id="btn-4" onclick="seleccionarGrupo(4)">Seleccionar</button>
+                </div>
+            </div>
+            <div id="message"></div>
+        </div>
+    </div>
+
+    <script type="module" src="js/seleccion_grupos.js"></script>
+</body>
+</html> 
