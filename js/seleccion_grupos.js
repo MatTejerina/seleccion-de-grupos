@@ -96,27 +96,26 @@ function toggleLogoutSpinner(show) {
 // Inicializar la aplicación
 document.addEventListener('DOMContentLoaded', inicializarApp);
 
-const LIMITE_POR_GRUPO = 1; // Constante para el límite
+const LIMITE_GRUPO = 1; // Constante para el límite
 
 // Función para actualizar la UI de un grupo
-function actualizarUIGrupo(numeroGrupo, cantidadMiembros) {
-    const grupoElement = document.querySelector(`.grupo:nth-child(${numeroGrupo})`);
-    const button = document.getElementById(`btn-${numeroGrupo}`);
-    const contador = document.getElementById(`count-${numeroGrupo}`);
-    
-    if (grupoElement && button && contador) {
-        contador.textContent = cantidadMiembros;
+function actualizarUIGrupo(grupoId) {
+    const grupoRef = ref(database, `grupos/${grupoId}`);
+    onValue(grupoRef, (snapshot) => {
+        const grupoData = snapshot.val();
+        const cantidadIntegrantes = grupoData?.integrantes ? 
+            Object.keys(grupoData.integrantes).length : 0;
+
+        const button = document.getElementById(`btn-${grupoId}`);
+        const contador = document.getElementById(`count-${grupoId}`);
         
-        if (cantidadMiembros >= LIMITE_POR_GRUPO) {
-            button.disabled = true;
-            grupoElement.classList.add('lleno');
-            button.textContent = 'Grupo Completo';
-        } else {
-            button.disabled = false;
-            grupoElement.classList.remove('lleno');
-            button.textContent = 'Seleccionar';
+        if (contador) contador.textContent = cantidadIntegrantes;
+        if (button) {
+            button.disabled = cantidadIntegrantes >= LIMITE_GRUPO;
+            button.textContent = cantidadIntegrantes >= LIMITE_GRUPO ? 
+                'Grupo Completo' : 'Seleccionar';
         }
-    }
+    });
 }
 
 // Función para seleccionar grupo
@@ -135,7 +134,7 @@ window.seleccionarGrupo = async function(numeroGrupo) {
         const snapshot = await get(grupoRef);
         const miembros = snapshot.val() || {};
         
-        if (Object.keys(miembros).length >= LIMITE_POR_GRUPO) {
+        if (Object.keys(miembros).length >= LIMITE_GRUPO) {
             mostrarMensaje("Este grupo ya está completo.", "error");
             return;
         }
@@ -172,57 +171,66 @@ document.getElementById('btnLogout').addEventListener('click', async (e) => {
 });
 
 async function seleccionarGrupo(grupoId) {
+    if (!auth.currentUser) {
+        mostrarMensaje("Por favor, inicia sesión nuevamente.", "error");
+        return;
+    }
+
     const button = document.getElementById(`btn-${grupoId}`);
     const spinner = document.getElementById(`buttonSpinner-${grupoId}`);
     
     try {
-        // Deshabilitar el botón y mostrar spinner
         button.disabled = true;
         spinner.style.display = 'inline-block';
         
         const grupoRef = ref(database, `grupos/${grupoId}`);
         
-        // Realizar transacción atómica
+        // Transacción atómica con validación estricta
         const result = await runTransaction(grupoRef, (grupoActual) => {
-            if (!grupoActual) return null;
-            
-            // Verificar cantidad actual de integrantes
-            const cantidadActual = grupoActual.integrantes ? 
-                Object.keys(grupoActual.integrantes).length : 0;
-            
-            // Si ya está lleno, abortar la transacción
-            if (cantidadActual >= 1) {
-                return undefined; // Esto abortará la transacción
+            // Si no existe el grupo, inicializarlo
+            if (!grupoActual) {
+                grupoActual = { integrantes: {} };
             }
-            
-            // Si hay espacio, agregar al usuario
-            if (!grupoActual.integrantes) {
-                grupoActual.integrantes = {};
+
+            // Obtener cantidad actual de integrantes
+            const integrantes = grupoActual.integrantes || {};
+            const cantidadActual = Object.keys(integrantes).length;
+
+            // Validaciones
+            if (cantidadActual >= LIMITE_GRUPO) {
+                console.log('Grupo lleno:', cantidadActual, LIMITE_GRUPO);
+                return undefined; // Abortar transacción
             }
-            
-            // Verificar que el usuario no esté ya en el grupo
-            if (grupoActual.integrantes[auth.currentUser.uid]) {
-                return undefined;
+
+            if (integrantes[auth.currentUser.uid]) {
+                console.log('Usuario ya en grupo');
+                return undefined; // Abortar transacción
             }
-            
-            grupoActual.integrantes[auth.currentUser.uid] = true;
+
+            // Agregar nuevo integrante
+            grupoActual.integrantes = {
+                ...integrantes,
+                [auth.currentUser.uid]: {
+                    timestamp: serverTimestamp(),
+                    email: auth.currentUser.email
+                }
+            };
+
             return grupoActual;
         });
 
         if (!result.committed) {
-            mostrarMensaje('El grupo ya está lleno o ya perteneces a él', 'error');
-            return false;
+            mostrarMensaje("No se pudo unir al grupo. El grupo está lleno o ya perteneces a él.", "error");
+            return;
         }
 
-        mostrarMensaje('Te has unido al grupo exitosamente', 'success');
-        return true;
+        mostrarMensaje(`Te has unido exitosamente al Grupo ${grupoId}`, "success");
+        actualizarUIGrupo(grupoId);
 
     } catch (error) {
-        console.error('Error al seleccionar grupo:', error);
-        mostrarMensaje('Error al seleccionar el grupo', 'error');
-        return false;
+        console.error("Error:", error);
+        mostrarMensaje("Error al seleccionar grupo. Por favor, intenta nuevamente.", "error");
     } finally {
-        // Restaurar el botón
         button.disabled = false;
         spinner.style.display = 'none';
     }
@@ -269,4 +277,20 @@ onAuthStateChanged(auth, (user) => {
     } else {
         window.location.href = 'index.html';
     }
+});
+
+// Escuchar cambios en tiempo real
+function inicializarEscuchaGrupos() {
+    const gruposRef = ref(database, 'grupos');
+    onValue(gruposRef, (snapshot) => {
+        const grupos = snapshot.val() || {};
+        Object.keys(grupos).forEach(grupoId => {
+            actualizarUIGrupo(grupoId);
+        });
+    });
+}
+
+// Inicializar al cargar la página
+document.addEventListener('DOMContentLoaded', () => {
+    inicializarEscuchaGrupos();
 });
