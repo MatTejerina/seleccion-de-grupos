@@ -17,4 +17,65 @@ body {
 
 .content {
     padding: 20px;
+}
+
+.button-spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #ffffff;
+    border-top: 2px solid transparent;
+    display: inline-block;
+    margin-left: 8px;
+    vertical-align: middle;
+}
+
+button {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.button-container {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+}
+
+.grupo {
+    position: relative;
+    overflow: hidden;
+    transition: background-color 0.3s ease;
+}
+
+.ribbon-completo {
+    position: absolute;
+    top: 20px;
+    right: -35px;
+    transform: rotate(45deg);
+    background: #e74c3c;
+    color: white;
+    padding: 5px 40px;
+    font-size: 0.8em;
+    font-weight: bold;
+    text-transform: uppercase;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    display: none;
+}
+
+.grupo.completo {
+    background-color: rgba(231, 76, 60, 0.1);
+    border-color: rgba(236, 66, 47, 0.3);
+}
+
+.grupo-completo {
+    color: #e74c3c;
+    font-weight: bold;
+    font-size: 0.9em;
+    background: #fde2e2;
+    padding: 3px 8px;
+    border-radius: 4px;
 } 

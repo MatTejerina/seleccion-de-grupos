@@ -1,94 +1,80 @@
-import { auth } from './firebase-config.js';
-import { createUserWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+import { createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { ref, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+import { auth, database } from "./firebase-config.js";
 
-function toggleSpinner(show, message = 'Cargando...') {
-    const spinner = document.getElementById('spinnerOverlay');
-    const spinnerText = spinner.querySelector('.spinner-text');
-    spinnerText.textContent = message;
-    spinner.style.display = show ? 'flex' : 'none';
-}
-
-function mostrarMensaje(mensaje, tipo) {
-    const messageElement = document.getElementById('message');
-    messageElement.textContent = mensaje;
-    messageElement.className = tipo;
-    messageElement.style.display = 'block';
-}
-
-document.getElementById('registroForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    const nombre = document.getElementById('nombre').value;
-
-    // Validación de contraseña
-    if (password.length < 6) {
-        mostrarMensaje("La contraseña debe tener al menos 6 caracteres", "error");
-        return;
-    }
-
+async function registrarUsuario(email, password, nombre) {
     try {
-        toggleSpinner(true, 'Creando cuenta...');
+        toggleSpinner(true);
         
-        // Crear usuario
+        // Validación del nombre completo
+        if (!nombre || nombre.trim() === '') {
+            throw new Error('El nombre completo es requerido');
+        }
+
+        // 1. Crear usuario en Authentication
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
 
-        // Actualizar perfil con nombre
-        await updateProfile(user, {
-            displayName: nombre
-        });
-
-        // Guardar información adicional en la base de datos
-        const db = getDatabase();
-        await set(ref(db, 'usuarios/' + user.uid), {
-            nombre: nombre,
+        // 2. Guardar datos en Realtime Database
+        const userRef = ref(database, `usuarios/${user.uid}`);
+        const userData = {
             email: email,
-            timestamp: Date.now()
-        });
+            nombre: nombre.trim(),
+            fechaRegistro: new Date().toISOString(),
+            status: 'online'
+        };
 
-        mostrarMensaje("Cuenta creada exitosamente", "success");
+        // Guardar en la base de datos
+        await set(userRef, userData);
+        console.log('Datos guardados:', userData); // Para verificar
+
+        mostrarMensaje('Cuenta creada exitosamente', 'success');
         
-        // Redirigir después de un breve delay
         setTimeout(() => {
             window.location.href = 'seleccion_grupos.html';
         }, 1500);
 
     } catch (error) {
-        console.error("Error:", error);
-        let mensajeError = 'Error al crear la cuenta';
-        
-        switch (error.code) {
-            case 'auth/email-already-in-use':
-                mensajeError = 'Este correo electrónico ya está registrado';
-                break;
-            case 'auth/invalid-email':
-                mensajeError = 'Correo electrónico inválido';
-                break;
-            case 'auth/operation-not-allowed':
-                mensajeError = 'El registro de usuarios está deshabilitado';
-                break;
-            case 'auth/weak-password':
-                mensajeError = 'La contraseña debe tener al menos 6 caracteres';
-                break;
-            case 'auth/network-request-failed':
-                mensajeError = 'Error de conexión. Verifica tu internet';
-                break;
-            default:
-                mensajeError = `Error: ${error.message}`;
-        }
-        
-        mostrarMensaje(mensajeError, "error");
+        console.error('Error en registro:', error);
+        mostrarMensaje(
+            error.message === 'El nombre completo es requerido' 
+                ? error.message 
+                : obtenerMensajeError(error), 
+            'error'
+        );
     } finally {
         toggleSpinner(false);
     }
+}
+
+// Asegúrate de que el formulario tenga el ID correcto
+document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('registroForm');
+    if (form) {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const nombre = document.getElementById('nombre').value.trim();
+            
+            await registrarUsuario(email, password, nombre);
+        });
+    }
 });
 
-// Verificar si ya hay una sesión activa
-auth.onAuthStateChanged((user) => {
-    if (user) {
-        window.location.href = 'seleccion_grupos.html';
+function toggleSpinner(show) {
+    const spinner = document.getElementById('buttonSpinner');
+    if (spinner) {
+        spinner.style.display = show ? 'inline-block' : 'none';
     }
-}); 
+}
+
+function mostrarMensaje(mensaje, tipo) {
+    const messageElement = document.getElementById('message');
+    if (messageElement) {
+        messageElement.textContent = mensaje;
+        messageElement.className = `message ${tipo}`;
+        messageElement.style.display = 'block';
+    }
+} 

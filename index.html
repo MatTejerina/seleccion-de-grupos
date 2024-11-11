@@ -2,9 +2,9 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>Iniciar Sesión</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
     <link rel="stylesheet" href="css/main.css">
 </head>
 <body>
@@ -34,7 +34,10 @@
                     placeholder="Contraseña"
                     autocomplete="current-password">
             </div>
-            <button type="submit">Iniciar Sesión</button>
+            <button type="submit">
+                <span>Iniciar Sesión</span>
+                <div class="spinner button-spinner" id="buttonSpinner" style="display: none;"></div>
+            </button>
         </form>
         <div id="message"></div>
         <div class="register-link">
