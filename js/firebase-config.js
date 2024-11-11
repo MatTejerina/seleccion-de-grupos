@@ -19,14 +19,41 @@ const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 const auth = getAuth(app);
 
-// Configura la persistencia para mejorar el rendimiento
+// Monitorear el estado de conexión
 const connectedRef = ref(database, '.info/connected');
 onValue(connectedRef, (snap) => {
     if (snap.val() === true) {
-        console.log('conectado');
+        // Conexión establecida
+        console.debug('Firebase: Conexión establecida');
     } else {
-        console.log('desconectado');
+        // Desconexión o intentando conectar
+        console.debug('Firebase: Verificando conexión...');
     }
+});
+
+// Opcional: Agregar un indicador visual de conexión
+function actualizarEstadoConexion(conectado) {
+    const mensaje = document.getElementById('message');
+    if (mensaje) {
+        if (!conectado) {
+            mensaje.textContent = 'Verificando conexión...';
+            mensaje.className = 'warning';
+        } else {
+            mensaje.textContent = '';
+            mensaje.className = '';
+        }
+    }
+}
+
+// Monitorear desconexiones de red
+window.addEventListener('online', () => {
+    console.debug('Dispositivo en línea');
+    actualizarEstadoConexion(true);
+});
+
+window.addEventListener('offline', () => {
+    console.debug('Dispositivo fuera de línea');
+    actualizarEstadoConexion(false);
 });
 
 export { database, auth }; 

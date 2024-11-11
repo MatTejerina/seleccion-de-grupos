@@ -4,25 +4,42 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>Login</title>
+    <title>Iniciar Sesión</title>
     <link rel="stylesheet" href="css/main.css">
 </head>
 <body>
+    <div class="spinner-overlay" id="spinnerOverlay">
+        <div class="spinner"></div>
+        <div class="spinner-text">Iniciando sesión...</div>
+    </div>
+
     <div class="login-container">
-        <h2>Iniciar Sesión</h2>
-        <form id="loginForm">
+        <h1>Iniciar Sesión</h1>
+        <form id="loginForm" autocomplete="on">
             <div class="form-group">
-                <input type="email" id="email" required placeholder="Correo electrónico" autocomplete="email">
+                <input 
+                    type="email" 
+                    id="email" 
+                    name="email"
+                    required 
+                    placeholder="Correo electrónico"
+                    autocomplete="email">
             </div>
             <div class="form-group">
-                <input type="password" id="password" required placeholder="Contraseña" autocomplete="current-password">
+                <input 
+                    type="password" 
+                    id="password" 
+                    name="password"
+                    required 
+                    placeholder="Contraseña"
+                    autocomplete="current-password">
             </div>
             <button type="submit">Iniciar Sesión</button>
         </form>
-        <p id="message"></p>
-        <p class="register-link">
-            ¿No tienes una cuenta? <a href="registro.html">Regístrate aquí</a>
-        </p>
+        <div id="message"></div>
+        <div class="register-link">
+            ¿No tienes cuenta? <a href="registro.html">Regístrate aquí</a>
+        </div>
     </div>
     <script type="module" src="js/login.js"></script>
 </body>

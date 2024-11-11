@@ -5,6 +5,7 @@
 @import 'components/grupos.css';
 @import 'components/messages.css';
 @import 'components/resultados.css';
+@import 'components/spinner.css';
 
 /* Estilos globales */
 body {
