@@ -1,64 +1,48 @@
-import { auth } from './firebase-config.js';
 import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { auth } from "./firebase-config.js";
 
-// Función para mostrar/ocultar el spinner
-function toggleSpinner(show, message = 'Cargando...') {
-    const spinner = document.getElementById('spinnerOverlay');
-    const spinnerText = spinner.querySelector('.spinner-text');
-    spinnerText.textContent = message;
-    spinner.style.display = show ? 'flex' : 'none';
+function toggleSpinner(show) {
+    const spinner = document.getElementById('buttonSpinner');
+    const submitButton = document.querySelector('button[type="submit"]');
+    
+    if (spinner && submitButton) {
+        spinner.style.display = show ? 'inline-block' : 'none';
+        submitButton.disabled = show;
+    }
 }
 
-// Función para mostrar mensajes
-function mostrarMensaje(mensaje, tipo) {
-    const messageElement = document.getElementById('message');
-    messageElement.textContent = mensaje;
-    messageElement.className = tipo;
-    messageElement.style.display = 'block';
-}
-
-// Manejar el inicio de sesión
-document.getElementById('loginForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    
+async function iniciarSesion(email, password) {
     try {
-        toggleSpinner(true, 'Iniciando sesión...');
-        
+        toggleSpinner(true);
         await signInWithEmailAndPassword(auth, email, password);
-        
-        // Redirigir después de un inicio de sesión exitoso
         window.location.href = 'seleccion_grupos.html';
     } catch (error) {
-        console.error("Error de inicio de sesión:", error);
-        let mensajeError = 'Error al iniciar sesión';
-        
-        switch (error.code) {
-            case 'auth/invalid-email':
-                mensajeError = 'Correo electrónico inválido';
-                break;
-            case 'auth/user-disabled':
-                mensajeError = 'Usuario deshabilitado';
-                break;
-            case 'auth/user-not-found':
-                mensajeError = 'Usuario no encontrado';
-                break;
-            case 'auth/wrong-password':
-                mensajeError = 'Contraseña incorrecta';
-                break;
-        }
-        
-        mostrarMensaje(mensajeError, 'error');
+        console.error('Error de inicio de sesión:', error);
+        mostrarMensaje(obtenerMensajeError(error), 'error');
     } finally {
         toggleSpinner(false);
     }
-});
+}
 
-// Verificar si ya hay una sesión activa
-auth.onAuthStateChanged((user) => {
-    if (user) {
-        window.location.href = 'seleccion_grupos.html';
+function mostrarMensaje(mensaje, tipo) {
+    const messageElement = document.getElementById('message');
+    if (messageElement) {
+        messageElement.textContent = mensaje;
+        messageElement.className = `message ${tipo}`;
+    }
+}
+
+// Event Listener para el formulario
+document.addEventListener('DOMContentLoaded', () => {
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) {
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            
+            await iniciarSesion(email, password);
+        });
     }
 }); 
