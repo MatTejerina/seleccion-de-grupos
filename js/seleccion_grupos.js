@@ -171,25 +171,60 @@ document.getElementById('btnLogout').addEventListener('click', async (e) => {
     }
 });
 
-async function seleccionarGrupo(id) {
+async function seleccionarGrupo(grupoId) {
+    const button = document.getElementById(`btn-${grupoId}`);
+    const spinner = document.getElementById(`buttonSpinner-${grupoId}`);
+    
     try {
-        // Mostrar el spinner del botón específico
-        document.getElementById(`buttonSpinner-${id}`).style.display = 'inline-block';
-        document.getElementById(`btn-${id}`).disabled = true;
+        // Deshabilitar el botón y mostrar spinner
+        button.disabled = true;
+        spinner.style.display = 'inline-block';
+        
+        const grupoRef = ref(database, `grupos/${grupoId}`);
+        
+        // Realizar transacción atómica
+        const result = await runTransaction(grupoRef, (grupoActual) => {
+            if (!grupoActual) return null;
+            
+            // Verificar cantidad actual de integrantes
+            const cantidadActual = grupoActual.integrantes ? 
+                Object.keys(grupoActual.integrantes).length : 0;
+            
+            // Si ya está lleno, abortar la transacción
+            if (cantidadActual >= 1) {
+                return undefined; // Esto abortará la transacción
+            }
+            
+            // Si hay espacio, agregar al usuario
+            if (!grupoActual.integrantes) {
+                grupoActual.integrantes = {};
+            }
+            
+            // Verificar que el usuario no esté ya en el grupo
+            if (grupoActual.integrantes[auth.currentUser.uid]) {
+                return undefined;
+            }
+            
+            grupoActual.integrantes[auth.currentUser.uid] = true;
+            return grupoActual;
+        });
 
-        // Tu lógica de selección de grupo aquí
-        const resultado = await runTransaction(/* ... */);
+        if (!result.committed) {
+            mostrarMensaje('El grupo ya está lleno o ya perteneces a él', 'error');
+            return false;
+        }
 
-        // Ocultar el spinner cuando termine
-        document.getElementById(`buttonSpinner-${id}`).style.display = 'none';
-        document.getElementById(`btn-${id}`).disabled = false;
+        mostrarMensaje('Te has unido al grupo exitosamente', 'success');
+        return true;
 
-        return resultado;
     } catch (error) {
-        // En caso de error, también ocultar el spinner
-        document.getElementById(`buttonSpinner-${id}`).style.display = 'none';
-        document.getElementById(`btn-${id}`).disabled = false;
-        console.error('Error:', error);
+        console.error('Error al seleccionar grupo:', error);
+        mostrarMensaje('Error al seleccionar el grupo', 'error');
+        return false;
+    } finally {
+        // Restaurar el botón
+        button.disabled = false;
+        spinner.style.display = 'none';
     }
 }
 
