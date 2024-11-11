@@ -168,4 +168,18 @@
     .grupo h3 {
         font-size: 1.5em;
     }
+}
+
+.grupos-info {
+    text-align: center;
+    margin-bottom: 20px;
+    padding: 10px;
+    background: rgba(52, 152, 219, 0.1);
+    border-radius: 8px;
+}
+
+.info-text {
+    color: #2c3e50;
+    font-size: 0.9em;
+    margin: 0;
 } 

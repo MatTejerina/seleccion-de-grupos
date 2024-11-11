@@ -1,5 +1,5 @@
 import { database, auth } from './firebase-config.js';
-import { ref, onValue, get, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+import { ref, onValue, get, update, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 import { signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 // Usar async/await para las operaciones de Firebase
@@ -36,7 +36,7 @@ async function inicializarApp() {
                 mostrarMensaje('Error al cargar datos', 'error');
             }
         } else {
-            window.location.href = 'login.html';
+            window.location.href = 'index.html';
         }
     });
 }
@@ -50,8 +50,8 @@ function actualizarContadoresGrupos(grupos) {
         
         if (contador) contador.textContent = cantidadMiembros;
         if (boton) {
-            boton.disabled = cantidadMiembros >= 12;
-            if (cantidadMiembros >= 12) {
+            boton.disabled = cantidadMiembros >= 1;
+            if (cantidadMiembros >= 1) {
                 boton.textContent = 'Grupo Completo';
             }
         }
@@ -73,8 +73,38 @@ function mostrarMensaje(texto, tipo) {
     }
 }
 
+function toggleSpinner(show, message = 'Cargando...') {
+    const spinner = document.getElementById('spinnerOverlay');
+    const spinnerText = spinner.querySelector('.spinner-text');
+    spinnerText.textContent = message;
+    spinner.style.display = show ? 'flex' : 'none';
+}
+
 // Inicializar la aplicación
 document.addEventListener('DOMContentLoaded', inicializarApp);
+
+const LIMITE_POR_GRUPO = 1; // Constante para el límite
+
+// Función para actualizar la UI de un grupo
+function actualizarUIGrupo(numeroGrupo, cantidadMiembros) {
+    const grupoElement = document.querySelector(`.grupo:nth-child(${numeroGrupo})`);
+    const button = document.getElementById(`btn-${numeroGrupo}`);
+    const contador = document.getElementById(`count-${numeroGrupo}`);
+    
+    if (grupoElement && button && contador) {
+        contador.textContent = cantidadMiembros;
+        
+        if (cantidadMiembros >= LIMITE_POR_GRUPO) {
+            button.disabled = true;
+            grupoElement.classList.add('lleno');
+            button.textContent = 'Grupo Completo';
+        } else {
+            button.disabled = false;
+            grupoElement.classList.remove('lleno');
+            button.textContent = 'Seleccionar';
+        }
+    }
+}
 
 // Función para seleccionar grupo
 window.seleccionarGrupo = async function(numeroGrupo) {
@@ -84,39 +114,47 @@ window.seleccionarGrupo = async function(numeroGrupo) {
     }
 
     const user = auth.currentUser;
-    deshabilitarBotones();
-
     try {
+        toggleSpinner(true, 'Seleccionando grupo...');
+        
+        // Verificar el estado actual del grupo
         const grupoRef = ref(database, `grupos/${numeroGrupo}`);
         const snapshot = await get(grupoRef);
         const miembros = snapshot.val() || {};
         
-        if (Object.keys(miembros).length >= 12) {
+        if (Object.keys(miembros).length >= LIMITE_POR_GRUPO) {
             mostrarMensaje("Este grupo ya está completo.", "error");
             return;
         }
 
+        // Realizar la actualización
         const updates = {};
         updates[`grupos/${numeroGrupo}/${user.uid}`] = true;
         updates[`usuarios/${user.uid}/grupo`] = numeroGrupo;
-        updates[`usuarios/${user.uid}/timestamp`] = Date.now();
+        updates[`usuarios/${user.uid}/timestamp`] = serverTimestamp();
 
         await update(ref(database), updates);
         mostrarMensaje(`¡Te has unido exitosamente al Grupo ${numeroGrupo}!`, "success");
+        
     } catch (error) {
         console.error("Error:", error);
         mostrarMensaje("Error al seleccionar grupo. Por favor, intenta nuevamente.", "error");
+    } finally {
+        toggleSpinner(false);
     }
-}; 
+};
 
 // Manejar cierre de sesión
 document.getElementById('btnLogout').addEventListener('click', async (e) => {
     e.preventDefault();
     try {
+        toggleSpinner(true, 'Cerrando sesión...');
         await signOut(auth);
         window.location.href = "index.html";
     } catch (error) {
         console.error("Error al cerrar sesión:", error);
         mostrarMensaje("Error al cerrar sesión", "error");
+    } finally {
+        toggleSpinner(false);
     }
 }); 
