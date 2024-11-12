@@ -3,31 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>Resultados de Grupos</title>
+    <title>Resultados - Sistema de Grupos</title>
+    <link rel="stylesheet" href="css/navbar.css">
     <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/resultados.css">
 </head>
 <body>
-    <nav class="navbar">
-        <div class="nav-container">
-            <a href="seleccion_grupos.html" class="nav-logo">Sistema de Grupos</a>
-            <div class="nav-links">
-                <a href="seleccion_grupos.html">Selección</a>
-                <a href="resultados.html" class="active">Resultados</a>
-                <a href="#" id="btnLogout">Cerrar Sesión</a>
-            </div>
-        </div>
-    </nav>
-
-    <div class="content">
+    <!-- El navbar se insertará aquí automáticamente -->
+    <div class="container">
+        <h1>Resultados de Grupos</h1>
         <div class="resultados-container">
-            <h1>Resultados de la Asignación</h1>
-            <div id="grupos-container">
-                <!-- Los grupos se cargarán aquí dinámicamente -->
-            </div>
+            <!-- Los grupos se generarán dinámicamente aquí -->
         </div>
     </div>
-
+    <script type="module" src="js/navbar.js"></script>
     <script type="module" src="js/resultados.js"></script>
 </body>
 </html>

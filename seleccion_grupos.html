@@ -2,73 +2,20 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Selección de Grupos</title>
+    <link rel="stylesheet" href="css/navbar.css">
     <link rel="stylesheet" href="css/main.css">
 </head>
 <body>
-    <nav class="navbar">
-        <div class="nav-container">
-            <a href="seleccion_grupos.html" class="nav-logo">Sistema de Grupos</a>
-            <div class="nav-links">
-                <a href="seleccion_grupos.html" class="active">Selección</a>
-                <a href="resultados.html">Resultados</a>
-                <a href="#" id="btnLogout">Cerrar Sesión</a>
-            </div>
-        </div>
-    </nav>
-
-    <div class="content">
-        <div class="seleccion-container">
-            <div class="user-header">
-                <span>Bienvenido: <span id="userName">Cargando...</span></span>
-            </div>
-
-            <h2>Selección de Grupo</h2>
-            <div id="grupos-container">
-                <div class="grupo" id="grupo-1">
-                    <div class="ribbon-completo">COMPLETO</div>
-                    <h3>Agustin Sal</h3>
-                    <div class="contador">
-                        Integrantes: <span id="count-1">0</span>/1
-                    </div>
-                    <div class="button-container">
-                        <button id="btn-1" onclick="seleccionarGrupo(1)">
-                            <span>Seleccionar</span>
-                            <div class="spinner button-spinner" id="buttonSpinner-1" style="display: none;"></div>
-                        </button>
-                    </div>
-                </div>
-                <div class="grupo">
-                    <h3>Fabian Guerrero</h3>
-                    <div class="contador">
-                        Integrantes: <span id="count-2">0</span>/1
-                    </div>
-                    <button id="btn-2" onclick="seleccionarGrupo(2)">Seleccionar</button>
-                </div>
-                <div class="grupo">
-                    <h3>Manuel Sosa</h3>
-                    <div class="contador">
-                        Integrantes: <span id="count-3">0</span>/1
-                    </div>
-                    <button id="btn-3" onclick="seleccionarGrupo(3)">Seleccionar</button>
-                </div>
-                <div class="grupo">
-                    <h3>Sergio Gomez</h3>
-                    <div class="contador">
-                        Integrantes: <span id="count-4">0</span>/1
-                    </div>
-                    <button id="btn-4" onclick="seleccionarGrupo(4)">Seleccionar</button>
-                </div>
-            </div>
-            <div id="message"></div>
-            <div class="grupos-info">
-                <p class="info-text">Cada grupo tiene un límite de 1 persona</p>
-            </div>
+    <!-- El navbar se insertará aquí automáticamente -->
+    <div class="container">
+        <h1>Selección de Grupos</h1>
+        <div class="grupos-container">
+            <!-- Los grupos se generarán dinámicamente -->
         </div>
     </div>
-
+    <script type="module" src="js/navbar.js"></script>
     <script type="module" src="js/seleccion_grupos.js"></script>
 </body>
 </html> 

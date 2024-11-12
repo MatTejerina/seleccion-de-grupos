@@ -1,47 +1,21 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getDatabase, ref, onValue, set, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { getDatabase } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
     apiKey: "AIzaSyCaDSh4lgQWum4Nsd1GCHhMV6ekD_iwZP0",
     authDomain: "seleccion-de-grupos.firebaseapp.com",
-    projectId: "seleccion-de-grupos",
     databaseURL: "https://seleccion-de-grupos-default-rtdb.firebaseio.com",
-    storageBucket: "seleccion-de-grupos.appspot.com",
+    projectId: "seleccion-de-grupos",
+    storageBucket: "seleccion-de-grupos.firebasestorage.app",
     messagingSenderId: "1031698181043",
-    appId: "1:1031698181043:web:ef91094542037e9cd1f9c6"
-};
+    appId: "1:1031698181043:web:ef91094542037e9cd1f9c6",
+    measurementId: "G-ECYPX03GK6"
+  };
 
 const app = initializeApp(firebaseConfig);
-const database = getDatabase(app);
 const auth = getAuth(app);
+const database = getDatabase(app);
 
-// Manejo de estado del usuario
-function handleUserStatus(userId) {
-    if (!userId) return;
-
-    const userStatusRef = ref(database, `usuarios/${userId}/status`);
-    const connectedRef = ref(database, '.info/connected');
-
-    onValue(connectedRef, async (snapshot) => {
-        if (snapshot.val() === true) {
-            try {
-                await set(userStatusRef, {
-                    state: 'online',
-                    lastChanged: serverTimestamp()
-                });
-            } catch (error) {
-                console.error('Error actualizando estado:', error);
-            }
-        }
-    });
-}
-
-// Observador de autenticación
-onAuthStateChanged(auth, (user) => {
-    if (user) {
-        handleUserStatus(user.uid);
-    }
-});
-
-export { database, auth }; 
+export { auth, database }; 
