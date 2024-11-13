@@ -40,7 +40,7 @@ function crearEstructuraGrupos() {
                     <h3 id="titulo-grupo-${i}">Grupo ${i}</h3>
                     <div class="grupo-info">
                         <div class="contador">
-                            Integrantes: <span id="count-${i}">0</span>/1
+                            Integrantes: <span id="count-${i}">0</span>/4
                         </div>
                         ${esLiderActual ? 
                             `<button class="btn-liderar" data-grupo="${i}">
@@ -97,7 +97,7 @@ function actualizarInterfazGrupo(grupoId) {
         const user = auth.currentUser;
         const esLiderActual = esLider(user?.email);
         
-        // Actualizar título y contador (igual que antes)
+        // Actualizar título y contador
         const tituloElement = document.getElementById(`titulo-grupo-${grupoId}`);
         if (tituloElement) {
             tituloElement.textContent = grupoData?.lider?.nombre || `Grupo ${grupoId}`;
@@ -107,7 +107,7 @@ function actualizarInterfazGrupo(grupoId) {
         if (contadorElement) {
             const cantidadIntegrantes = grupoData?.integrantes ? 
                 Object.keys(grupoData.integrantes).length : 0;
-            contadorElement.textContent = cantidadIntegrantes;
+            contadorElement.textContent = `${cantidadIntegrantes}`;  // Cambiar 1 por 4
         }
 
         // Verificar si el usuario ya está en algún grupo
@@ -135,7 +135,7 @@ function actualizarInterfazGrupo(grupoId) {
             const botonSeleccionar = document.getElementById(`btn-${grupoId}`);
             if (botonSeleccionar) {
                 const estaLleno = grupoData?.integrantes && 
-                    Object.keys(grupoData.integrantes).length >= 1;
+                    Object.keys(grupoData.integrantes).length >= 4;  // Cambiar 1 por 4
                 const estaEnEsteGrupo = grupoData?.integrantes && 
                     grupoData.integrantes[user.uid];
                 
@@ -179,7 +179,7 @@ async function seleccionarGrupo(grupoId) {
             const cantidadIntegrantes = grupoActual.integrantes ? 
                 Object.keys(grupoActual.integrantes).length : 0;
             
-            if (cantidadIntegrantes >= 1) {
+            if (cantidadIntegrantes >= 4) {  // Cambiar 1 por 4
                 return undefined;
             }
 
@@ -257,82 +257,37 @@ async function seleccionarLiderazgo(grupoId) {
     }
 }
 
-// Función para deshabilitar botones de liderazgo
-function deshabilitarBotonesLiderazgo(grupoSeleccionado) {
-    const botones = document.querySelectorAll('.btn-liderar');
-    botones.forEach(boton => {
-        const grupoId = boton.getAttribute('data-grupo');
-        if (grupoId === grupoSeleccionado) {
-            boton.textContent = 'Tu grupo asignado';
-        } else {
-            boton.disabled = true;
-            boton.textContent = 'No disponible';
-        }
-        boton.disabled = true;
-    });
+// Función para mostrar mensajes en la interfaz
+function mostrarMensaje(mensaje, tipo) {
+    const mensajeContainer = document.querySelector('.mensaje-container');
+    if (mensajeContainer) {
+        mensajeContainer.innerHTML = `
+            <div class="mensaje ${tipo}">${mensaje}</div>
+        `;
+        setTimeout(() => {
+            mensajeContainer.innerHTML = '';
+        }, 3000);
+    }
 }
 
-// Función para mostrar mensajes
-function mostrarMensaje(mensaje, tipo = 'info') {
-    // Configuración de iconos según el tipo de mensaje
-    const iconos = {
-        success: '🎉',
-        error: '❌',
-        info: 'ℹ️',
-        warning: '⚠️'
-    };
-
-    // Configuración de colores según el tipo
-    const colores = {
-        success: 'linear-gradient(to right, #00b09b, #96c93d)',
-        error: 'linear-gradient(to right, #ff5f6d, #ffc371)',
-        info: 'linear-gradient(to right, #2193b0, #6dd5ed)',
-        warning: 'linear-gradient(to right, #f2994a, #f2c94c)'
-    };
-
-    // Usar el objeto Toastify global
-    window.Toastify({
-        text: `${iconos[tipo]} ${mensaje}`,
-        duration: 3000,
-        close: true,
-        gravity: "top",
-        position: "center",
-        stopOnFocus: true,
-        style: {
-            background: colores[tipo],
-            borderRadius: "8px",
-            padding: "16px 24px",
-            fontSize: "16px",
-            fontWeight: "500",
-            boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-            minWidth: "300px",
-            textAlign: "center"
-        },
-        onClick: function(){} // Callback después de hacer clic
-    }).showToast();
+// Deshabilitar botones de liderazgo una vez asignado
+function deshabilitarBotonesLiderazgo(grupoId) {
+    const botonLiderar = document.querySelector(`[data-grupo="${grupoId}"]`);
+    if (botonLiderar) {
+        botonLiderar.disabled = true;
+    }
 }
 
-// Inicializar la aplicación
-function inicializarApp() {
-    auth.onAuthStateChanged(user => {
+// Iniciar la estructura de grupos y la interfaz al cargar la página
+document.addEventListener('DOMContentLoaded', () => {
+    onAuthStateChanged(auth, (user) => {
         if (user) {
             crearEstructuraGrupos();
             for (let i = 1; i <= 4; i++) {
                 actualizarInterfazGrupo(i);
             }
         } else {
-            window.location.href = 'index.html';
+            console.log('Usuario no autenticado');
         }
     });
-}
-
-// Iniciar la aplicación
-document.addEventListener('DOMContentLoaded', inicializarApp);
-
-// Exportar las funciones necesarias
-export { 
-    seleccionarLiderazgo, 
-    seleccionarGrupo, 
-    mostrarMensaje, 
-    esLider 
-};
+});
