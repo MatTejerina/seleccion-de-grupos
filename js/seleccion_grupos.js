@@ -167,25 +167,22 @@ async function seleccionarGrupo(grupoId) {
         // Verificar si el usuario ya está en algún grupo
         const estaEnAlgunGrupo = await usuarioYaEstaEnGrupo(user.uid);
         if (estaEnAlgunGrupo) {
-            mostrarMensaje('Ya estás asignado a un grupo', 'error');
+            mostrarMensaje('Ya estás asignado a un grupo', 'warning');
             return;
         }
 
         const grupoRef = ref(database, `grupos/${grupoId}`);
         
-        // Realizar la transacción
         const result = await runTransaction(grupoRef, (grupoActual) => {
             if (!grupoActual) grupoActual = {};
             
-            // Verificar si el grupo está lleno
             const cantidadIntegrantes = grupoActual.integrantes ? 
                 Object.keys(grupoActual.integrantes).length : 0;
             
             if (cantidadIntegrantes >= 1) {
-                return undefined; // Abortar si el grupo está lleno
+                return undefined;
             }
 
-            // Agregar al usuario al grupo
             const integrantes = grupoActual.integrantes || {};
             integrantes[user.uid] = {
                 email: user.email,
@@ -199,15 +196,7 @@ async function seleccionarGrupo(grupoId) {
         });
 
         if (result.committed) {
-            mostrarMensaje(`Te has unido al Grupo ${grupoId}`, 'success');
-            // Deshabilitar todos los botones de selección
-            for (let i = 1; i <= 4; i++) {
-                const btn = document.getElementById(`btn-${i}`);
-                if (btn && i !== grupoId) {
-                    btn.disabled = true;
-                    btn.textContent = 'No disponible';
-                }
-            }
+            mostrarMensaje(`¡Bienvenido al Grupo ${grupoId}! Te has unido exitosamente`, 'success');
         } else {
             mostrarMensaje('No se pudo unir al grupo. El grupo está lleno o ya perteneces a él', 'error');
         }
@@ -222,8 +211,8 @@ async function seleccionarGrupo(grupoId) {
 async function seleccionarLiderazgo(grupoId) {
     try {
         const user = auth.currentUser;
-        if (!user || !esLider(user.email)) {
-            mostrarMensaje('No tienes permisos para liderar grupos', 'error');
+        if (!user) {
+            mostrarMensaje('Debes iniciar sesión para liderar un grupo', 'error');
             return;
         }
 
@@ -237,7 +226,7 @@ async function seleccionarLiderazgo(grupoId) {
         );
 
         if (yaEsLider) {
-            mostrarMensaje('Ya eres líder de otro grupo', 'error');
+            mostrarMensaje('Ya eres líder de otro grupo', 'warning');
             return;
         }
 
@@ -247,7 +236,7 @@ async function seleccionarLiderazgo(grupoId) {
         const grupoData = grupoSnapshot.val() || {};
 
         if (grupoData.lider) {
-            mostrarMensaje('Este grupo ya tiene un líder asignado', 'error');
+            mostrarMensaje('Este grupo ya tiene un líder asignado', 'warning');
             return;
         }
 
@@ -259,7 +248,7 @@ async function seleccionarLiderazgo(grupoId) {
             timestamp: serverTimestamp()
         });
 
-        mostrarMensaje(`Has sido asignado como líder del Grupo ${grupoId}`, 'success');
+        mostrarMensaje(`¡Felicitaciones! Ahora eres líder del Grupo ${grupoId}`, 'success');
         deshabilitarBotonesLiderazgo(grupoId);
 
     } catch (error) {
@@ -284,8 +273,43 @@ function deshabilitarBotonesLiderazgo(grupoSeleccionado) {
 }
 
 // Función para mostrar mensajes
-function mostrarMensaje(mensaje, tipo = 'error') {
-    alert(mensaje); // Puedes mejorar esto con una UI más atractiva
+function mostrarMensaje(mensaje, tipo = 'info') {
+    // Configuración de iconos según el tipo de mensaje
+    const iconos = {
+        success: '🎉',
+        error: '❌',
+        info: 'ℹ️',
+        warning: '⚠️'
+    };
+
+    // Configuración de colores según el tipo
+    const colores = {
+        success: 'linear-gradient(to right, #00b09b, #96c93d)',
+        error: 'linear-gradient(to right, #ff5f6d, #ffc371)',
+        info: 'linear-gradient(to right, #2193b0, #6dd5ed)',
+        warning: 'linear-gradient(to right, #f2994a, #f2c94c)'
+    };
+
+    // Usar el objeto Toastify global
+    window.Toastify({
+        text: `${iconos[tipo]} ${mensaje}`,
+        duration: 3000,
+        close: true,
+        gravity: "top",
+        position: "center",
+        stopOnFocus: true,
+        style: {
+            background: colores[tipo],
+            borderRadius: "8px",
+            padding: "16px 24px",
+            fontSize: "16px",
+            fontWeight: "500",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+            minWidth: "300px",
+            textAlign: "center"
+        },
+        onClick: function(){} // Callback después de hacer clic
+    }).showToast();
 }
 
 // Inicializar la aplicación
