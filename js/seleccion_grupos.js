@@ -20,7 +20,7 @@ const LIDERES_PERMITIDOS = {
 };
 
 // Variables para el límite de integrantes (2 grupos de 12 y 2 de 11)
-let limiteGruposDe12 = 2;
+let limiteGruposDe12 = 12;
 let limiteGruposDe11 = 2;
 let gruposDe12Completados = 0;
 let gruposDe11Completados = 0
@@ -189,7 +189,7 @@ async function seleccionarGrupo(grupoId) {
                 Object.keys(grupoActual.integrantes).length : 0;
 
             // Calcula el límite actual basado en los grupos completados
-            const limiteIntegrantes = gruposDe12Completados < limiteGruposDe12 ? 2 : 1;
+            const limiteIntegrantes = gruposDe12Completados < limiteGruposDe12 ? 12 : 11;
 
             if (cantidadIntegrantes >= limiteIntegrantes) {
                 return undefined; // Grupo lleno, abortar transacción
