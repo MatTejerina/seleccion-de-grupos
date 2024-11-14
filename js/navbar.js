@@ -65,10 +65,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Escuchar cambios en la autenticación
     auth.onAuthStateChanged(async user => {
         if (user) {
-            console.log('Usuario autenticado:', {
-                uid: user.uid,
-                email: user.email
-            });
             await mostrarNombreUsuario(user);
         } else if (window.location.pathname !== '/index.html' && 
                    window.location.pathname !== '/registro.html') {

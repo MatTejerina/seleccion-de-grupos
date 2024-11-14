@@ -78,19 +78,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const nombre = document.getElementById('nombre').value;
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            const confirmPassword = document.getElementById('confirm-password').value;
 
-            if (!nombre || !email || !password || !confirmPassword) {
+            if (!nombre || !email || !password) {
                 alert('Todos los campos son obligatorios');
-                return;
-            }
-
-            if (password !== confirmPassword) {
-                alert('Las contraseñas no coinciden');
                 return;
             }
 
             await registrarUsuario(nombre, email, password);
         });
     }
-}); 
+});

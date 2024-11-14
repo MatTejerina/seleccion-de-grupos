@@ -19,6 +19,12 @@ const LIDERES_PERMITIDOS = {
     'sergio.gomez@super.com': 'Sergio Gomez'
 };
 
+// Variables para el límite de integrantes (2 grupos de 12 y 2 de 11)
+let limiteGruposDe12 = 2;
+let limiteGruposDe11 = 2;
+let gruposDe12Completados = 0;
+let gruposDe11Completados = 0
+
 // Función para verificar si es líder
 function esLider(email) {
     return LIDERES_PERMITIDOS.hasOwnProperty(email);
@@ -40,7 +46,7 @@ function crearEstructuraGrupos() {
                     <h3 id="titulo-grupo-${i}">Grupo ${i}</h3>
                     <div class="grupo-info">
                         <div class="contador">
-                            Integrantes: <span id="count-${i}">0</span>/4
+                            Integrantes: <span id="count-${i}">0</span>
                         </div>
                         ${esLiderActual ? 
                             `<button class="btn-liderar" data-grupo="${i}">
@@ -89,73 +95,76 @@ async function usuarioYaEstaEnGrupo(userId) {
     }
 }
 
-// Función para actualizar la interfaz de grupo
+// Función para actualizar la interfaz del grupo con el límite dinámico correcto
 function actualizarInterfazGrupo(grupoId) {
     const grupoRef = ref(database, `grupos/${grupoId}`);
     onValue(grupoRef, async (snapshot) => {
         const grupoData = snapshot.val();
         const user = auth.currentUser;
         const esLiderActual = esLider(user?.email);
-        
-        // Actualizar título y contador
-        const tituloElement = document.getElementById(`titulo-grupo-${grupoId}`);
-        if (tituloElement) {
-            tituloElement.textContent = grupoData?.lider?.nombre || `Grupo ${grupoId}`;
+
+        const cantidadIntegrantes = grupoData?.integrantes ? 
+            Object.keys(grupoData.integrantes).length : 0;
+
+        // Contar cuántos grupos han alcanzado el límite de 12 y 11 integrantes
+        const gruposSnapshot = await get(ref(database, 'grupos'));
+        const todosLosGrupos = gruposSnapshot.val() || {};
+
+        // Actualizamos las variables de grupos completados
+        gruposDe12Completados = Object.values(todosLosGrupos).filter(grupo => 
+            grupo.integrantes && Object.keys(grupo.integrantes).length === 12
+        ).length;
+
+        gruposDe11Completados = Object.values(todosLosGrupos).filter(grupo => 
+            grupo.integrantes && Object.keys(grupo.integrantes).length === 11
+        ).length;
+
+        // Determinar el límite de integrantes para el grupo actual
+        let limiteIntegrantes;
+        if (gruposDe12Completados < limiteGruposDe12) {
+            limiteIntegrantes = 12;
+        } else if (gruposDe11Completados < limiteGruposDe11) {
+            limiteIntegrantes = 11;
+        } else {
+            limiteIntegrantes = 0; // No más espacios disponibles
         }
 
+        // Actualizar contador en la interfaz
         const contadorElement = document.getElementById(`count-${grupoId}`);
         if (contadorElement) {
-            const cantidadIntegrantes = grupoData?.integrantes ? 
-                Object.keys(grupoData.integrantes).length : 0;
-            contadorElement.textContent = `${cantidadIntegrantes}`;  // Cambiar 1 por 4
+            contadorElement.textContent = `${cantidadIntegrantes}/${limiteIntegrantes}`;
         }
 
-        // Verificar si el usuario ya está en algún grupo
-        const estaEnAlgunGrupo = await usuarioYaEstaEnGrupo(user.uid);
-
-        if (esLiderActual) {
-            const botonLiderar = document.querySelector(`[data-grupo="${grupoId}"]`);
-            if (botonLiderar) {
-                const tieneOtroLider = grupoData?.lider !== undefined;
-                const esLiderDeEsteGrupo = grupoData?.lider?.uid === user.uid;
-                
-                botonLiderar.disabled = tieneOtroLider || estaEnAlgunGrupo;
-                
-                if (esLiderDeEsteGrupo) {
-                    botonLiderar.textContent = 'Tu grupo asignado';
-                } else if (tieneOtroLider) {
-                    botonLiderar.textContent = 'Grupo asignado';
-                } else if (estaEnAlgunGrupo) {
-                    botonLiderar.textContent = 'Ya estás en otro grupo';
-                } else {
-                    botonLiderar.textContent = 'Liderar este grupo';
-                }
-            }
-        } else {
-            const botonSeleccionar = document.getElementById(`btn-${grupoId}`);
-            if (botonSeleccionar) {
-                const estaLleno = grupoData?.integrantes && 
-                    Object.keys(grupoData.integrantes).length >= 4;  // Cambiar 1 por 4
-                const estaEnEsteGrupo = grupoData?.integrantes && 
-                    grupoData.integrantes[user.uid];
-                
-                botonSeleccionar.disabled = estaLleno || estaEnAlgunGrupo;
-                
-                if (estaEnEsteGrupo) {
-                    botonSeleccionar.textContent = 'Tu grupo';
-                } else if (estaLleno) {
-                    botonSeleccionar.textContent = 'Grupo Completo';
-                } else if (estaEnAlgunGrupo) {
-                    botonSeleccionar.textContent = 'Ya estás en otro grupo';
-                } else {
-                    botonSeleccionar.textContent = 'Seleccionar';
-                }
-            }
+        // Verificar si el grupo está lleno y deshabilitar el botón de selección
+        const botonSeleccionar = document.getElementById(`btn-${grupoId}`);
+        if (botonSeleccionar) {
+            const estaLleno = cantidadIntegrantes >= limiteIntegrantes;
+            botonSeleccionar.disabled = estaLleno || (await usuarioYaEstaEnGrupo(user.uid));
+            botonSeleccionar.textContent = estaLleno ? 'Grupo Completo' : 'Seleccionar';
         }
     });
 }
 
-// Función para seleccionar grupo
+// Activar la actualización en tiempo real de todos los grupos
+function activarActualizacionTiempoReal() {
+    const gruposRef = ref(database, 'grupos');
+    onValue(gruposRef, () => {
+        // Actualizar todos los grupos en tiempo real
+        for (let i = 1; i <= 4; i++) {
+            actualizarInterfazGrupo(i);
+        }
+    });
+}
+
+// Configuración de autenticación
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        crearEstructuraGrupos(); // Crear la estructura de los grupos al iniciar sesión
+        activarActualizacionTiempoReal(); // Escuchar cambios en tiempo real de todos los grupos
+    }
+});
+
+// Función para seleccionar grupo con límite dinámico
 async function seleccionarGrupo(grupoId) {
     try {
         const user = auth.currentUser;
@@ -175,32 +184,31 @@ async function seleccionarGrupo(grupoId) {
         
         const result = await runTransaction(grupoRef, (grupoActual) => {
             if (!grupoActual) grupoActual = {};
-            
+
             const cantidadIntegrantes = grupoActual.integrantes ? 
                 Object.keys(grupoActual.integrantes).length : 0;
-            
-            if (cantidadIntegrantes >= 4) {  // Cambiar 1 por 4
-                return undefined;
+
+            // Calcula el límite actual basado en los grupos completados
+            const limiteIntegrantes = gruposDe12Completados < limiteGruposDe12 ? 2 : 1;
+
+            if (cantidadIntegrantes >= limiteIntegrantes) {
+                return undefined; // Grupo lleno, abortar transacción
             }
 
-            const integrantes = grupoActual.integrantes || {};
-            integrantes[user.uid] = {
+            grupoActual.integrantes = grupoActual.integrantes || {};
+            grupoActual.integrantes[user.uid] = {
                 email: user.email,
                 timestamp: serverTimestamp()
             };
 
-            return {
-                ...grupoActual,
-                integrantes: integrantes
-            };
+            return grupoActual;
         });
 
         if (result.committed) {
-            mostrarMensaje(`¡Bienvenido al Grupo ${grupoId}! Te has unido exitosamente`, 'success');
+            mostrarMensaje(`¡Bienvenido al Grupo ${grupoId}!`, 'success');
         } else {
             mostrarMensaje('No se pudo unir al grupo. El grupo está lleno o ya perteneces a él', 'error');
         }
-
     } catch (error) {
         console.error('Error al seleccionar grupo:', error);
         mostrarMensaje('Error al seleccionar grupo', 'error');
@@ -257,37 +265,41 @@ async function seleccionarLiderazgo(grupoId) {
     }
 }
 
-// Función para mostrar mensajes en la interfaz
-function mostrarMensaje(mensaje, tipo) {
-    const mensajeContainer = document.querySelector('.mensaje-container');
-    if (mensajeContainer) {
-        mensajeContainer.innerHTML = `
-            <div class="mensaje ${tipo}">${mensaje}</div>
-        `;
-        setTimeout(() => {
-            mensajeContainer.innerHTML = '';
-        }, 3000);
-    }
+// Función para mostrar mensajes
+function mostrarMensaje(mensaje, tipo = 'info') {
+    // Configuración de iconos según el tipo de mensaje
+    const iconos = {
+        success: '🎉',
+        error: '❌',
+        info: 'ℹ️',
+        warning: '⚠️'
+    };
+
+    // Configuración de colores según el tipo
+    const colores = {
+        success: 'linear-gradient(to right, #00b09b, #96c93d)',
+        error: 'linear-gradient(to right, #ff5f6d, #ffc371)',
+        info: 'linear-gradient(to right, #2193b0, #6dd5ed)',
+        warning: 'linear-gradient(to right, #f2994a, #f2c94c)'
+    };
+
+    // Usar el objeto Toastify global
+    window.Toastify({
+        text: `${iconos[tipo] || ''} ${mensaje}`,
+        duration: 5000,
+        close: true,
+        gravity: "bottom",
+        position: "right",
+        backgroundColor: colores[tipo] || colores.info
+    }).showToast();
 }
 
-// Deshabilitar botones de liderazgo una vez asignado
-function deshabilitarBotonesLiderazgo(grupoId) {
-    const botonLiderar = document.querySelector(`[data-grupo="${grupoId}"]`);
-    if (botonLiderar) {
-        botonLiderar.disabled = true;
-    }
-}
-
-// Iniciar la estructura de grupos y la interfaz al cargar la página
-document.addEventListener('DOMContentLoaded', () => {
-    onAuthStateChanged(auth, (user) => {
-        if (user) {
-            crearEstructuraGrupos();
-            for (let i = 1; i <= 4; i++) {
-                actualizarInterfazGrupo(i);
-            }
-        } else {
-            console.log('Usuario no autenticado');
+// Configuración de autenticación
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        crearEstructuraGrupos();
+        for (let i = 1; i <= 4; i++) {
+            actualizarInterfazGrupo(i);
         }
-    });
+    }
 });
